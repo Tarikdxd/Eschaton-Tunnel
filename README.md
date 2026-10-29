@@ -1,70 +1,46 @@
-<div align="center">
+# Eschaton-Tunnel
 
-# ⚡ Eschaton-Tunnel
+A small HTTP tunnel client written in Python with no third-party dependencies. It connects to a
+relay server, registers a subdomain, and forwards incoming HTTP requests to a port on your
+machine.
 
-**Instant, Zero-Config Localhost to Internet Reverse Proxy & Public Tunneling CLI**
+The client and the relay protocol are implemented in this repository. A public relay is not
+guaranteed to be running: the default host, `relay.eschaton.io`, points at infrastructure that
+may not serve this protocol. Point `--relay` at your own relay if the default does not respond.
 
-*A free, open-source, and lightweight alternative to ngrok and Cloudflare Tunnels.*
+## Requirements
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%99%A5-red.svg)](https://github.com/Tarikdxd/Eschaton-Tunnel)
-[![No Cloud Sign-up](https://img.shields.io/badge/Account-Not%20Required-brightgreen.svg)]()
+Python 3.9 or newer. No packages to install.
 
----
+## Usage
 
-</div>
-
-## ✨ Why Eschaton-Tunnel?
-
-Most tunneling tools (like ngrok) have added mandatory accounts, strict session timeouts, and bandwidth throttles. **Eschaton-Tunnel** provides a direct, developer-first tunnel client and relay server designed for local webhook testing, mobile debugging, and showcasing projects to clients.
-
-- 🚀 **One-Command Setup:** Expose your local web server in seconds (`eschaton-tunnel http 3000`).
-- 🔐 **End-to-End HTTPS:** Automatic TLS encryption for all incoming web requests.
-- 🩺 **Live Webhook & Traffic Inspector:** Inspect incoming GET/POST requests, HTTP headers, payloads, and response times in real time.
-- 🌐 **Custom Subdomain Support:** Request persistent subdomains (`--subdomain my-api`).
-- 🪶 **Zero Heavy Dependencies:** Minimal resource footprint.
-
----
-
-## 🚀 Quick Start
-
-### 1. Installation & Usage
 ```bash
-git clone https://github.com/Tarikdxd/Eschaton-Tunnel.git
-cd Eschaton-Tunnel
 python main.py http 3000
+python main.py http 8080 --subdomain demo
 ```
 
-### 2. Custom Subdomain
-```bash
-python main.py http 8080 --subdomain test-webhook
-```
+| Argument | Description |
+| --- | --- |
+| `port` | Local port to forward to |
+| `--subdomain` | Request a stable subdomain instead of a random one |
+| `--relay` | Relay host, default `relay.eschaton.io` |
 
-Output:
-```text
-=================================================================
-           ⚡ ESCHATON-TUNNEL - ZERO-CONFIG REVERSE PROXY
-      Instant Localhost to Internet Tunnel (Free ngrok Alternative)
-                     Developer: Tarikdxd
-=================================================================
-[+] Local Target Port : http://127.0.0.1:8080
-[+] Tunnel Status     : Online / Multiplexing Active
-[+] Public URL        : https://test-webhook.relay.eschaton.io
-[+] Web Inspector     : http://127.0.0.1:4040 (Live HTTP Traffic)
-=================================================================
-```
+## How it works
 
----
+1. The client opens a connection to the relay and sends a registration message with the chosen
+   subdomain and target port (`src/protocol.py`).
+2. The relay sends each incoming HTTP request to the client as a JSON message.
+3. `src/forwarder.py` replays the request against `127.0.0.1:<port>`.
+4. The response travels back over the same connection and the relay returns it to the caller.
 
-## 🧪 Tests
+Requests are handled concurrently in `src/tunnel.py`.
+
+## Tests
 
 ```bash
 python -m unittest discover tests
 ```
 
----
+## License
 
-## 📄 License
-
-Distributed under the [MIT License](LICENSE).
+MIT. See [LICENSE](LICENSE).
